@@ -1,0 +1,5 @@
+﻿  ConsoleApplication.cpp
+D:\Projects\cpp-projects\TaskApplication\TaskApplication\ConsoleApplication.cpp(11,6): warning C4101: 'year': unreferenced local variable
+D:\Projects\cpp-projects\TaskApplication\TaskApplication\ConsoleApplication.cpp(11,19): warning C4101: 'day': unreferenced local variable
+D:\Projects\cpp-projects\TaskApplication\TaskApplication\ConsoleApplication.cpp(11,12): warning C4101: 'month': unreferenced local variable
+  TaskApplication.vcxproj -> D:\Projects\cpp-projects\TaskApplication\x64\Debug\TaskApplication.exe
