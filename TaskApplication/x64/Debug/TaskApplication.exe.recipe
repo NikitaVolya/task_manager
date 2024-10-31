@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Projects\cpp-projects\TaskApplication\x64\Debug\TaskApplication.exe</FullPath>
+      <FullPath>C:\Projects\cpp\TaskManager\x64\Debug\TaskApplication.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

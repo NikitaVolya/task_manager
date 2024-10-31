@@ -1,34 +1,53 @@
 #include "ConsoleApplication.h"
 #include <iomanip>
 
+std::string truncate(const std::string& text, size_t width) {
+	if (text.length() > width - 1) {
+		return text.substr(0, width - 4) + "...";
+	}
+	else {
+		return text;
+	}
+}
+
 void ConsoleApplication::createTask()
 {
 	string title, description;
-	char level_option;
+	std::tm date_input;
+	char hasPriority;
 	int level;
-	std::tm date_input = {};
+	TaskInitVisitor* options;
+	TaskFactoryInterface* factory;
 
-	int year, month, day;
+	std::cout << "Task creation started...\n";
 	std::cin.ignore(100, '\n');
-	std::cout << "Task title: ";
-	std::getline(std::cin, title);
 
-	std::cout << "Task description: ";
+	while (true)
+	{
+		std::cout << "Enter the title: ";
+		std::getline(std::cin, title);
+
+		TaskScheduler* leaf = root->find(title);
+		if (!leaf)
+			break;
+		std::cout << "A task with this title already exists.\n";
+	}
+	
+	std::cout << "Enter the description: ";
 	std::getline(std::cin, description);
 
-	std::cout << "Task date to complete [year-month-day]: ";
+	std::cout << "Enter the task date [year-month-day]: ";
 	std::cin >> std::get_time(&date_input, "%Y-%m-%d");
 	std::time_t date = std::mktime(&date_input);
 	
 	std::cin.ignore(100, '\n');
-	std::cout << "Add level? [y/n]: ";
-	std::cin >> level_option;
+	std::cout << "Is there a priority level for this task? (y/n): ";
+	std::cin >> hasPriority;
 
-	TaskInitVisitor* options;
-	TaskFactoryInterface* factory;
-	if (level_option == 'y' || level_option == 'Y')
+	
+	if (hasPriority == 'y' || hasPriority == 'Y')
 	{
-		std::cout << "Task level: ";
+		std::cout << "Enter the priority level (number): ";
 		std::cin >> level;
 
 		options = new TaskLevelInitVisitor(title.c_str(), description.c_str(), date, level);
@@ -39,9 +58,8 @@ void ConsoleApplication::createTask()
 		options = new TaskInitVisitor(title.c_str(), description.c_str(), date);
 		factory = new TaskFactory();
 	}
-	TaskInterface* task = factory->create(options);
-	TaskLeaf* leaf = new TaskLeaf{ task };
-	current_root->add(leaf);
+	TaskLeaf* new_leaf = new TaskLeaf{ factory->create(options) };
+	current_root->add(new_leaf);
 
 	delete factory;
 }
@@ -49,11 +67,13 @@ void ConsoleApplication::createTask()
 void ConsoleApplication::createList()
 {
 	string title, description;
+
+	std::cout << "Task list creation started...\n";
 	std::cin.ignore(100, '\n');
-	std::cout << "Task list title: ";
+	std::cout << "Enter the title: ";
 	std::getline(std::cin, title);
 
-	std::cout << "Task list description: ";
+	std::cout << "Enter the description: ";
 	std::getline(std::cin, description);
 
 	TaskComposide* new_list = new TaskComposide{ title.c_str(), description.c_str() };
@@ -88,7 +108,7 @@ void ConsoleApplication::findTask()
 	std::cin.ignore(100, '\n');
 	std::cout << "Title: ";
 	std::getline(std::cin, title);
-	TaskScheduler* leaf = current_root->find(title);
+	TaskScheduler* leaf = root->find(title);
 
 	if (!leaf)
 		return;
@@ -117,16 +137,28 @@ void ConsoleApplication::printCurrentRoot()
 {
 	if (!current_root->isLeaf())
 	{
-		std::cout << "\n=======================================\n";
-		std::cout << current_root->getTitle();
-		std::cout << "\n--------------------------\n";
+		std::cout << std::endl << std::string(75, '=') << std::endl;
+		std::cout << current_root->getTitle() << std::endl;
 		std::cout << current_root->getDescription();
-		std::cout << "\n=======================================\n";
+		std::cout << std::endl << std::string(75, '=') << std::endl;
+
+		const size_t titleWidth = 20;
+		const size_t descWidth = 30;
+
+		std::cout << std::left << std::setw(titleWidth) << "Task Title"
+			<< std::setw(descWidth) << "Description"
+			<< std::setw(15) << "Days Left"
+			<< std::setw(10) << "Priority" << "\n";
+		std::cout << std::string(titleWidth + descWidth + 25, '-') << "\n";
 
 		const vector<TaskScheduler*> list = ((TaskComposide*)(current_root))->getChildes();
 		for (auto it : list)
 		{
-			std::cout << it->getTitle() << " | " << it->getDescription() << " | Days left: " << it->getDaysLeft() << " | " << it->getLevel() << std::endl;
+			std::cout << std::left
+				<< std::setw(titleWidth) << truncate(it->getTitle(), titleWidth)
+				<< std::setw(descWidth) << truncate(it->getDescription(), descWidth)
+				<< std::setw(15) << it->getDaysLeft()
+				<< std::setw(10) << it->getLevel() << "\n";
 
 			if (!it->isLeaf())
 			{
