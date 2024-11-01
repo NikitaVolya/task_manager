@@ -27,7 +27,7 @@ void ConsoleApplication::createTask()
 
 	
 	std::cout << "Task creation started...\n";
-	
+	std::cin.ignore(100, '\n');
 
 	while (true)
 	{
@@ -79,7 +79,6 @@ void ConsoleApplication::createList()
 	system("cls");
 
 	string title, description;
-
 	std::cout << "Task list creation started...\n";
 	std::cin.ignore(100, '\n');
 	std::cout << "Enter the title: ";
@@ -92,28 +91,25 @@ void ConsoleApplication::createList()
 	current_root->add(new_list);
 }
 
-void ConsoleApplication::up()
+void ConsoleApplication::move_up()
 {
 	if (!current_root->getParent())
 		return;
 	current_root = current_root->getParent();
+	cursor_position = 0;
 }
 
-void ConsoleApplication::down()
+void ConsoleApplication::move_down()
 {
 	if (current_root->isLeaf())
 		return;
 
-	int number;
-	std::cout << "Choce line: ";
-	std::cin >> number;
-	std::cin.ignore(100, '\n');
-
 	vector<TaskScheduler*> list = ((TaskComposide*)(current_root))->getChildes();
-	if (number < 1 || number > list.size())
+	if (cursor_position < 0 || cursor_position >= list.size())
 		return;
 
-	current_root = list[number - 1];
+	current_root = list[cursor_position];
+	cursor_position = 0;
 }
 
 void ConsoleApplication::findTask()
@@ -159,7 +155,7 @@ void ConsoleApplication::printCurrentRoot()
 		const size_t titleWidth = 20;
 		const size_t descWidth = 30;
 
-		std::cout << std::left << std::setw(3) << " "
+		std::cout << std::left << "  "
 			<< std::setw(titleWidth) << "Task Title"
 			<< std::setw(descWidth) << "Description"
 			<< std::setw(15) << "Days Left"
@@ -170,22 +166,21 @@ void ConsoleApplication::printCurrentRoot()
 		int i = 0;
 		for (auto it : list)
 		{
-			i++;
 			std::cout << std::left
-				<< std::setw(3) << i
+				<< (i == cursor_position ? "> " : "  ")
 				<< std::setw(titleWidth) << truncate(it->getTitle(), titleWidth)
 				<< std::setw(descWidth) << truncate(it->getDescription(), descWidth)
 				<< std::setw(15) << it->getDaysLeft()
 				<< std::setw(10) << it->getLevel() << "\n";
-
 			if (!it->isLeaf())
 			{
 				const vector<TaskScheduler*> sub_list = ((TaskComposide*)(it))->getChildes();
 				for (auto sub_it : sub_list)
 				{
-					std::cout << "\t-" << sub_it->getTitle() << std::endl;
+					std::cout << "\t-" << truncate(sub_it->getTitle(), titleWidth) << std::endl;
 				}
 			}
+			i++;
 		}
 	}
 	else {
@@ -200,13 +195,31 @@ void ConsoleApplication::printCurrentRoot()
 	}
 }
 
+void ConsoleApplication::cursorUp()
+{
+	if (cursor_position > 0)
+		cursor_position--;
+}
+
+void ConsoleApplication::cursorDown()
+{
+	if (current_root->isLeaf())
+		return;
+
+	int size = ((TaskComposide*)(current_root))->getChildes().size();
+	if (cursor_position >= size - 1)
+		return;
+
+	cursor_position++;
+}
+
 void ConsoleApplication::menu()
 {
 	while (true)
 	{
 		system("cls");
 		int choice;
-		std::cout << "1. create task\n2. create list\n3. find task\n4. remove\n5. up\n6. down\n7. quit\n";
+		std::cout << "1. create task 2. create list  3. find task  4. remove  5. up  6. down  7. quit\n";
 		printCurrentRoot();
 		choice = _getch();
 
@@ -225,13 +238,19 @@ void ConsoleApplication::menu()
 			removeElement();
 			break;
 		case '5':
-			up();
+			move_up();
 			break;
 		case '6':
-			down();
+			move_down();
 			break;
 		case '7':
 			return;
+		case 72:
+			cursorUp();
+			break;
+		case 80:
+			cursorDown();
+			break;
 		}
 	}
 }
