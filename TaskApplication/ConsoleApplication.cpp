@@ -1,5 +1,6 @@
 #include "ConsoleApplication.h"
 #include <iomanip>
+#include <conio.h>
 
 std::string truncate(const std::string& text, size_t width) {
 	if (text.length() > width - 1) {
@@ -12,19 +13,26 @@ std::string truncate(const std::string& text, size_t width) {
 
 void ConsoleApplication::createTask()
 {
+	system("cls");
+
+	if (current_root->isLeaf())
+		return;
+
 	string title, description;
-	std::tm date_input;
+	std::tm date_input = {};
 	char hasPriority;
 	int level;
 	TaskInitVisitor* options;
 	TaskFactoryInterface* factory;
 
+	
 	std::cout << "Task creation started...\n";
-	std::cin.ignore(100, '\n');
+	
 
 	while (true)
 	{
 		std::cout << "Enter the title: ";
+		
 		std::getline(std::cin, title);
 
 		TaskScheduler* leaf = root->find(title);
@@ -36,15 +44,14 @@ void ConsoleApplication::createTask()
 	std::cout << "Enter the description: ";
 	std::getline(std::cin, description);
 
-	std::cout << "Enter the task date [year-month-day]: ";
-	std::cin >> std::get_time(&date_input, "%Y-%m-%d");
+	std::cout << "Enter the task date [day-month-year]: ";
+	std::cin >> std::get_time(&date_input, "%d-%m-%Y");
 	std::time_t date = std::mktime(&date_input);
 	
 	std::cin.ignore(100, '\n');
 	std::cout << "Is there a priority level for this task? (y/n): ";
 	std::cin >> hasPriority;
 
-	
 	if (hasPriority == 'y' || hasPriority == 'Y')
 	{
 		std::cout << "Enter the priority level (number): ";
@@ -66,6 +73,11 @@ void ConsoleApplication::createTask()
 
 void ConsoleApplication::createList()
 {
+	if (current_root->isLeaf())
+		return;
+
+	system("cls");
+
 	string title, description;
 
 	std::cout << "Task list creation started...\n";
@@ -89,17 +101,19 @@ void ConsoleApplication::up()
 
 void ConsoleApplication::down()
 {
-	string title;
-	std::cin.ignore(100, '\n');
-	std::cout << "Title: ";
-	std::getline(std::cin, title);
-	TaskScheduler* node = current_root->find(title);
-	if (!node)
-		return;
-	if (node->isLeaf())
+	if (current_root->isLeaf())
 		return;
 
-	current_root = node;
+	int number;
+	std::cout << "Choce line: ";
+	std::cin >> number;
+	std::cin.ignore(100, '\n');
+
+	vector<TaskScheduler*> list = ((TaskComposide*)(current_root))->getChildes();
+	if (number < 1 || number > list.size())
+		return;
+
+	current_root = list[number - 1];
 }
 
 void ConsoleApplication::findTask()
@@ -112,11 +126,8 @@ void ConsoleApplication::findTask()
 
 	if (!leaf)
 		return;
-	
-	if (!leaf->getParent())
-		return;
 
-	current_root = leaf->getParent();
+	current_root = leaf;
 }
 
 void ConsoleApplication::removeElement()
@@ -130,6 +141,9 @@ void ConsoleApplication::removeElement()
 		return;
 	if (!node->getParent())
 		return;
+
+	if (current_root == node)
+		current_root = node->getParent();
 	node->getParent()->remove(node);
 }
 
@@ -145,16 +159,20 @@ void ConsoleApplication::printCurrentRoot()
 		const size_t titleWidth = 20;
 		const size_t descWidth = 30;
 
-		std::cout << std::left << std::setw(titleWidth) << "Task Title"
+		std::cout << std::left << std::setw(3) << " "
+			<< std::setw(titleWidth) << "Task Title"
 			<< std::setw(descWidth) << "Description"
 			<< std::setw(15) << "Days Left"
 			<< std::setw(10) << "Priority" << "\n";
 		std::cout << std::string(titleWidth + descWidth + 25, '-') << "\n";
 
 		const vector<TaskScheduler*> list = ((TaskComposide*)(current_root))->getChildes();
+		int i = 0;
 		for (auto it : list)
 		{
+			i++;
 			std::cout << std::left
+				<< std::setw(3) << i
 				<< std::setw(titleWidth) << truncate(it->getTitle(), titleWidth)
 				<< std::setw(descWidth) << truncate(it->getDescription(), descWidth)
 				<< std::setw(15) << it->getDaysLeft()
@@ -170,6 +188,16 @@ void ConsoleApplication::printCurrentRoot()
 			}
 		}
 	}
+	else {
+		std::cout << std::endl << std::string(75, '=') << std::endl;
+		std::cout << "Title: " << std::endl;
+		std::cout << current_root->getTitle() << std::endl;
+		std::cout << "Description: " << std::endl;
+		std::cout << current_root->getDescription() << std::endl;
+		std::cout << "Days left: " << current_root->getDaysLeft() << std::endl;
+		std::cout << "Priority level: " << current_root->getLevel() << std::endl;
+		std::cout << std::string(75, '=') << std::endl;
+	}
 }
 
 void ConsoleApplication::menu()
@@ -180,29 +208,29 @@ void ConsoleApplication::menu()
 		int choice;
 		std::cout << "1. create task\n2. create list\n3. find task\n4. remove\n5. up\n6. down\n7. quit\n";
 		printCurrentRoot();
-		std::cin >> choice;
+		choice = _getch();
 
 		switch (choice)
 		{
-		case 1:
+		case '1':
 			createTask();
 			break;
-		case 2:
+		case '2':
 			createList();
 			break;
-		case 3:
+		case '3':
 			findTask();
 			break;
-		case 4:
+		case '4':
 			removeElement();
 			break;
-		case 5:
+		case '5':
 			up();
 			break;
-		case 6:
+		case '6':
 			down();
 			break;
-		case 7:
+		case '7':
 			return;
 		}
 	}
