@@ -115,7 +115,6 @@ void ConsoleApplication::move_down()
 void ConsoleApplication::findTask()
 {
 	string title;
-	std::cin.ignore(100, '\n');
 	std::cout << "Title: ";
 	std::getline(std::cin, title);
 	TaskScheduler* leaf = root->find(title);
@@ -128,19 +127,43 @@ void ConsoleApplication::findTask()
 
 void ConsoleApplication::removeElement()
 {
-	string title;
-	std::cin.ignore(100, '\n');
-	std::cout << "Title: ";
-	std::getline(std::cin, title);
-	TaskScheduler* node = current_root->find(title);
-	if (!node)
-		return;
-	if (!node->getParent())
-		return;
+	if (current_root->isLeaf())
+	{
+		TaskScheduler* parent = current_root->getParent();
+		root->remove(current_root);
+		current_root = parent;
+	}
+	else {
+		TaskComposide* composide = (TaskComposide*)current_root;
+		
+		if (cursor_position < 0 || cursor_position >= composide->getChildes().size())
+			return;
 
-	if (current_root == node)
-		current_root = node->getParent();
-	node->getParent()->remove(node);
+		composide->remove(composide->getChildes()[cursor_position]);
+	}
+	cursor_position = 0;
+}
+
+void ConsoleApplication::displayMenu()
+{
+	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(handle, 11);
+	std::cout << "MENU: arrows up/down) move cursore ";
+	SetConsoleTextAttribute(handle, 15);
+	std::cout << "1) New Task   ";
+	SetConsoleTextAttribute(handle, 10);
+	std::cout << "2) New List   ";
+	SetConsoleTextAttribute(handle, 12);
+	std::cout << "backspace) Delete   ";
+	SetConsoleTextAttribute(handle, 14);
+	std::cout << "esc) Close   ";
+	SetConsoleTextAttribute(handle, 9);
+	std::cout << "enter) Open   ";
+	SetConsoleTextAttribute(handle, 8);
+	std::cout << "f) Find   ";
+	SetConsoleTextAttribute(handle, 13);
+	std::cout << "q) Quit\n";
+	SetConsoleTextAttribute(handle, 15);
 }
 
 void ConsoleApplication::printCurrentRoot()
@@ -219,31 +242,33 @@ void ConsoleApplication::menu()
 	{
 		system("cls");
 		int choice;
-		std::cout << "1. create task 2. create list  3. find task  4. remove  5. up  6. down  7. quit\n";
+		displayMenu();
 		printCurrentRoot();
 		choice = _getch();
-
 		switch (choice)
 		{
 		case '1':
 			createTask();
+			saveManager->save(root);
 			break;
 		case '2':
 			createList();
+			saveManager->save(root);
 			break;
-		case '3':
+		case 'f':
 			findTask();
 			break;
-		case '4':
+		case 8:
 			removeElement();
+			saveManager->save(root);
 			break;
-		case '5':
+		case 27:
 			move_up();
 			break;
-		case '6':
+		case 13:
 			move_down();
 			break;
-		case '7':
+		case 'q':
 			return;
 		case 72:
 			cursorUp();

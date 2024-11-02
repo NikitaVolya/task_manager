@@ -23,6 +23,7 @@ public:
 	virtual const string& getTitle() const = 0;
 	virtual const string& getDescription() const = 0;
 	virtual int getDaysLeft() const = 0;
+	virtual time_t getDate() const = 0;
 	virtual int getLevel() const = 0;
 
 	virtual void add(TaskScheduler* value) = 0;
@@ -50,8 +51,10 @@ public:
 	TaskComposide(const char* titleP, const char* descriptionP) : title{ titleP }, description{ descriptionP }, childes{} {};
 	~TaskComposide();
 
-	virtual const string& getTitle() const { return title; };
-	virtual const string& getDescription() const { return description; };
+	const string& getTitle() const override { return title; };
+	const string& getDescription() const override { return description; };
+	time_t getDate() const override { return 0; }
+
 	virtual int getDaysLeft() const;
 	virtual int getLevel() const;
 
@@ -74,9 +77,11 @@ public:
 	TaskLeaf(TaskScheduler* parentP, TaskInterface* taskP) : task{ taskP }, TaskScheduler{ parentP } {};
 	~TaskLeaf() { delete task; }
 
-	virtual const string& getTitle() const { return task->getTitle(); };
-	virtual const string& getDescription() const { return task->getDescription(); };
-	virtual int getDaysLeft() const { return task->getDaysLeft(); };
+	const string& getTitle() const override { return task->getTitle(); };
+	const string& getDescription() const override { return task->getDescription(); };
+	int getDaysLeft() const override { return task->getDaysLeft(); };
+	time_t getDate() const override { return task->getDate(); }
+
 	virtual int getLevel() const { return task->getLevel(); };
 
 	void add(TaskScheduler* value) override { throw std::invalid_argument("TaskLeaf is leaf without childes"); };

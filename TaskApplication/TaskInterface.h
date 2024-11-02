@@ -18,6 +18,7 @@ public:
 
 	const string& getTitle() const { return title; }
 	const string& getDescription() const { return descripton; }
+	time_t getDate() const { return date; }
 	int getDaysLeft() const;
 	virtual int getLevel() const = 0;
 
